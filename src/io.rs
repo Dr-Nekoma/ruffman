@@ -1,5 +1,5 @@
 #[path = "./encode.rs"]
-mod encode;
+pub mod encode;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io;
@@ -18,7 +18,6 @@ pub fn read_file(filename: &str, buffer: &mut Vec<u8>) -> io::Result<usize> {
 }
 
 pub fn get_dictionary_header(bit_representation: &mut HashMap<String, String>) -> Vec<HeaderCell> {
-    let mut dict_header: Vec<String> = Vec::new();
     return bit_representation
         .iter()
         .map(|(symbol, bits)| HeaderCell {
@@ -34,7 +33,7 @@ pub fn get_padding_bits(header: Vec<HeaderCell>, mapped_content: &Vec<String>) -
         .iter()
         .fold(0, |acc, cell| acc + 8 + 8 + cell.bits.len());
     let content_bit_size = mapped_content.iter().fold(0, |acc, bits| acc + bits.len());
-    let reminder = ((header_bit_size as i32 + content_bit_size as i32) % 8);
+    let reminder = (header_bit_size as i32 + content_bit_size as i32) % 8;
     if reminder == 0 {
         return 0;
     } else {
@@ -46,7 +45,7 @@ pub fn compress_file(
     filename: &str,
     file_content: &mut Vec<u8>,
     bit_representation: &mut HashMap<String, String>,
-) {
+) -> std::io::Result<()> {
     let n = filename.len();
 
     let mut new_filename = filename[0..(n - 4)].to_owned();
@@ -71,13 +70,21 @@ pub fn compress_file(
         bits += content.as_str();
     }
 
-    for index in 0..padding {
+    for _ in 0..padding {
         bits += "0";
     }
 
-    // TODO: Write this into a file
+    let mut index = 0;
+    let mut binary_vector: Vec<u8> = Vec::new();
 
-    //let mut compressed_file = File::create(new_filename)?;
+    while index < bits.len() {
+        let byte = u8::from_str_radix(&(bits.as_str())[index..index + 8], 2)
+            .expect("Not a binary number!");
+        binary_vector.push(byte);
+        index += 8;
+    }
 
-    //compressed_file.write(buf)
+    let mut compressed_file = File::create(new_filename)?;
+    compressed_file.write_all(&binary_vector)?;
+    return Ok(());
 }

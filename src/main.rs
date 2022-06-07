@@ -1,9 +1,9 @@
-mod encode;
-mod heap;
-mod io;
+pub mod encode;
+pub mod heap;
+pub mod io;
 use std::collections::HashMap;
 
-fn main() {
+pub fn main() {
     let file_name = "test.txt";
 
     let mut file_content: Vec<u8> = Vec::new();
@@ -27,8 +27,11 @@ fn main() {
 
     encode::filter_by_symbols(original_symbols, &mut bit_representation);
 
-    println!("{:?}", bit_representation);
+    let encode_result: std::io::Result<()> =
+        io::compress_file(file_name, &mut file_content, &mut bit_representation);
 
-    io::compress_file(file_name, &mut file_content, &mut bit_representation);
-
+    match encode_result {
+        Ok(()) => println!("\nEncoded with success!"),
+        _ => println!("\nError during enconding!"),
+    }
 }
