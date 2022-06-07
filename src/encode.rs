@@ -125,3 +125,10 @@ pub fn filter_by_symbols(symbols_to_maintain: Vec<String>, hash_map: &mut HashMa
         }
     }
 }
+
+pub fn map_to_dict(content: &mut Vec<u8>, dictionary: &mut HashMap<String, String>) -> Vec<String> {
+    return (content
+        .iter()
+        .map(|byte| dictionary[&(byte.to_string())].to_owned()))
+    .collect();
+}

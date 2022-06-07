@@ -1,7 +1,7 @@
 mod encode;
 mod heap;
 mod io;
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 fn main() {
     let file_name = "test.txt";
@@ -28,4 +28,7 @@ fn main() {
     encode::filter_by_symbols(original_symbols, &mut bit_representation);
 
     println!("{:?}", bit_representation);
+
+    io::compress_file(file_name, &mut file_content, &mut bit_representation);
+
 }
