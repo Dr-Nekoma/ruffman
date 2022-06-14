@@ -34,4 +34,11 @@ pub fn main() {
         Ok(()) => println!("\nEncoded with success!"),
         _ => println!("\nError during enconding!"),
     }
+
+    let decode_result: std::io::Result<()> = io::read_drn_file(&file_name, "test.drn");
+
+    match decode_result {
+        Ok(()) => println!("\nDecoded with success!"),
+        _ => println!("\nError during deconding!"),
+    }
 }
