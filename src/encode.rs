@@ -1,10 +1,13 @@
 use crate::heap::*;
+use crate::io::*;
 use itertools::Itertools;
 use ordered_float::OrderedFloat;
 use std::cmp::Ordering;
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::prelude::*;
 
 pub fn calculate_probability(buffer: &mut Vec<u8>, total: usize) -> BinaryHeap<Reverse<HeapNode>> {
     let mut heap: BinaryHeap<Reverse<HeapNode>> = BinaryHeap::new();
@@ -77,7 +80,7 @@ pub fn compare_huffman_nodes(
     } else if (*parent_bit_2).0.len() == 0 {
         return Ordering::Greater;
     } else {
-        if (*parent_bit_1).0.len() > (*parent_bit_2).0.len() {
+        if (*parent_bit_1).0.len() < (*parent_bit_2).0.len() {
             return Ordering::Greater;
         } else {
             return Ordering::Less;
@@ -131,4 +134,55 @@ pub fn map_to_dict(content: &mut Vec<u8>, dictionary: &mut HashMap<String, Strin
         .iter()
         .map(|byte| dictionary[&(byte.to_string())].to_owned()))
     .collect();
+}
+
+pub fn compress_file(
+    filename: &str,
+    file_content: &mut Vec<u8>,
+    bit_representation: &mut HashMap<String, String>,
+) -> std::io::Result<()> {
+    let n = filename.len();
+
+    let mut new_filename = filename[0..(n - 4)].to_owned();
+    new_filename += ".drn";
+
+    let header_cells: Vec<HeaderCell> = get_dictionary_header(bit_representation);
+
+    let mut bits: String = String::new();
+
+    bits.push_str(format!("{:08b}", header_cells.len()).as_str());
+
+    for cell in header_cells.iter() {
+        bits.push_str(format!("{:08b}", cell.symbol).as_str());
+        bits.push_str(format!("{:08b}", cell.size_of_bits).as_str());
+        bits.push_str(cell.bits.as_str());
+    }
+
+    let translated_content: Vec<String> = map_to_dict(file_content, bit_representation);
+
+    let padding = get_padding_bits(header_cells, &translated_content);
+
+    bits += format!("{:08b}", padding).as_str();
+
+    for content in translated_content.iter() {
+        bits += content.as_str();
+    }
+
+    for _ in 0..padding {
+        bits += "0";
+    }
+
+    let mut index = 0;
+    let mut binary_vector: Vec<u8> = Vec::new();
+
+    while index < bits.len() {
+        let byte = u8::from_str_radix(&(bits.as_str())[index..index + 8], 2)
+            .expect("Not a binary number!");
+        binary_vector.push(byte);
+        index += 8;
+    }
+
+    let mut compressed_file = File::create(new_filename)?;
+    compressed_file.write_all(&binary_vector)?;
+    return Ok(());
 }
