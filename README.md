@@ -13,7 +13,7 @@ To execute the program you do:
 
 `cargo run FILE_PATH`
 
-It is *mandatory* to provide a file path. Ruffman will locate the file to start the encoding and decoding process.
+It is **mandatory** to provide a file path. Ruffman will locate the file to start the encoding and decoding processes.
 Here it is an example of output:
 
 ```
