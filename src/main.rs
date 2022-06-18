@@ -57,14 +57,14 @@ pub fn main() {
     let mut encoded_file_name = file_name[0..(n - 4)].to_owned();
     encoded_file_name += ".drn";
 
-    io::compare_file_sizes(&file_name, &encoded_file_name);
+    io::compare_file_sizes(file_name, &encoded_file_name);
 
     // DECODING
 
     io::read_file(encoded_file_name.as_str(), &mut encoded_file_content).unwrap();
 
     let decoded_result: std::io::Result<String> =
-        decode::decompress_drn_file(&mut encoded_file_content, &file_name);
+        decode::decompress_drn_file(&mut encoded_file_content, file_name);
 
     match decoded_result {
         Ok(str) => {

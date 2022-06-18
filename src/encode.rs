@@ -9,10 +9,10 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 
-pub fn calculate_probability(buffer: &mut Vec<u8>, total: usize) -> BinaryHeap<Reverse<HeapNode>> {
+pub fn calculate_probability(buffer: &mut [u8], total: usize) -> BinaryHeap<Reverse<HeapNode>> {
     let mut heap: BinaryHeap<Reverse<HeapNode>> = BinaryHeap::new();
 
-    let unique_elements: Vec<u8> = buffer.clone().into_iter().unique().collect();
+    let unique_elements: Vec<u8> = buffer.iter().copied().unique().collect();
 
     for element in unique_elements.iter() {
         let node = HeapNode {
@@ -24,7 +24,7 @@ pub fn calculate_probability(buffer: &mut Vec<u8>, total: usize) -> BinaryHeap<R
         heap.push(Reverse(node));
     }
 
-    return heap;
+    heap
 }
 
 pub fn accumulate_hash_map(
@@ -65,7 +65,7 @@ pub fn accumulate_hash_map(
 
     probabilities.push(Reverse(new_node));
 
-    return accumulate_hash_map(probabilities, map);
+    accumulate_hash_map(probabilities, map)
 }
 
 pub fn compare_huffman_nodes(
@@ -75,30 +75,26 @@ pub fn compare_huffman_nodes(
     let (_, parent_bit_1) = *t1;
     let (_, parent_bit_2) = *t2;
 
-    if (*parent_bit_1).0.len() == 0 {
-        return Ordering::Less;
-    } else if (*parent_bit_2).0.len() == 0 {
-        return Ordering::Greater;
+    if (*parent_bit_1).0.is_empty() {
+        Ordering::Less
+    } else if (*parent_bit_1).0.len() < (*parent_bit_2).0.len() || (*parent_bit_2).0.is_empty() {
+        Ordering::Greater
     } else {
-        if (*parent_bit_1).0.len() < (*parent_bit_2).0.len() {
-            return Ordering::Greater;
-        } else {
-            return Ordering::Less;
-        }
+        Ordering::Less
     }
 }
 
 pub fn bool_to_bit(b: bool) -> String {
     if b {
-        return "1".to_string();
+        "1".to_string()
     } else {
-        return "0".to_string();
+        "0".to_string()
     }
 }
 
 pub fn translate_symbols(map: &mut HashMap<String, (String, bool)>) -> HashMap<String, String> {
     let mut node_vector = Vec::from_iter(map.iter());
-    node_vector.sort_by(|t1, t2| compare_huffman_nodes(t1, t2));
+    node_vector.sort_by(compare_huffman_nodes);
 
     let mut symbols_to_bits: HashMap<String, String> = HashMap::new();
 
@@ -107,18 +103,18 @@ pub fn translate_symbols(map: &mut HashMap<String, (String, bool)>) -> HashMap<S
 
         let bit = bool_to_bit(*bool_bit);
 
-        if *parent == "" {
+        if (*parent).is_empty() {
             symbols_to_bits.insert((*symbol).clone(), bit);
         } else {
             let parent_representation: String = symbols_to_bits[parent].clone();
             symbols_to_bits.insert(
                 (*symbol).clone(),
-                String::from(parent_representation.as_str().to_owned() + bit.as_str()),
+                parent_representation.as_str().to_owned() + bit.as_str(),
             );
         }
     }
 
-    return symbols_to_bits;
+    symbols_to_bits
 }
 
 pub fn filter_by_symbols(symbols_to_maintain: Vec<String>, hash_map: &mut HashMap<String, String>) {
@@ -129,7 +125,7 @@ pub fn filter_by_symbols(symbols_to_maintain: Vec<String>, hash_map: &mut HashMa
     }
 }
 
-pub fn map_to_dict(content: &mut Vec<u8>, dictionary: &mut HashMap<String, String>) -> Vec<String> {
+pub fn map_to_dict(content: &mut [u8], dictionary: &mut HashMap<String, String>) -> Vec<String> {
     return (content
         .iter()
         .map(|byte| dictionary[&(byte.to_string())].to_owned()))
@@ -138,7 +134,7 @@ pub fn map_to_dict(content: &mut Vec<u8>, dictionary: &mut HashMap<String, Strin
 
 pub fn compress_file(
     filename: &str,
-    file_content: &mut Vec<u8>,
+    file_content: &mut [u8],
     bit_representation: &mut HashMap<String, String>,
 ) -> std::io::Result<()> {
     let n = filename.len();
@@ -184,5 +180,5 @@ pub fn compress_file(
 
     let mut compressed_file = File::create(new_filename)?;
     compressed_file.write_all(&binary_vector)?;
-    return Ok(());
+    Ok(())
 }

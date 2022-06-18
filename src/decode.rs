@@ -3,10 +3,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 
-pub fn decompress_drn_file(
-    buffer: &mut Vec<u8>,
-    original_filename: &str,
-) -> std::io::Result<String> {
+pub fn decompress_drn_file(buffer: &mut [u8], original_filename: &str) -> std::io::Result<String> {
     let n = original_filename.len();
     let mut new_filename = original_filename[0..(n - 4)].to_owned();
     new_filename += "_decompressed.txt";
@@ -51,7 +48,7 @@ pub fn decompress_drn_file(
 
     let mut output: Vec<u8> = Vec::new();
 
-    while index_for_bits <= stream_of_bits.len() - 1 {
+    while index_for_bits < stream_of_bits.len() {
         let mut byte: u8 = stream_of_bits.as_bytes()[index_for_bits];
         let mut c: char = byte as char;
 
@@ -75,5 +72,5 @@ pub fn decompress_drn_file(
 
     let mut decompressed_file = File::create(&new_filename)?;
     decompressed_file.write_all(&output)?;
-    return Ok(new_filename);
+    Ok(new_filename)
 }

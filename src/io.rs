@@ -26,16 +26,16 @@ pub fn get_dictionary_header(bit_representation: &mut HashMap<String, String>) -
         .collect();
 }
 
-pub fn get_padding_bits(header: Vec<HeaderCell>, mapped_content: &Vec<String>) -> i32 {
+pub fn get_padding_bits(header: Vec<HeaderCell>, mapped_content: &[String]) -> i32 {
     let header_bit_size = header
         .iter()
         .fold(0, |acc, cell| acc + 8 + 8 + cell.bits.len());
     let content_bit_size = mapped_content.iter().fold(0, |acc, bits| acc + bits.len());
     let reminder = (header_bit_size as i32 + content_bit_size as i32) % 8;
     if reminder == 0 {
-        return 0;
+        0
     } else {
-        return 8 - reminder;
+        8 - reminder
     }
 }
 
